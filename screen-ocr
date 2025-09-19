@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+LANGS="eng"
+PSM="6"
+VERBOSE="${VERBOSE:-0}"
+TMPDIR="${XDG_RUNTIME_DIR:-/tmp}"
+STAMP="$(date +'%Y%m%d_%H%M%S')"
+IMG="${TMPDIR}/screenocr_${STAMP}.png"
+PROCESSED="${IMG%.png}.proc.png"
+TEXT="${IMG%.png}.txt"
+to_clipboard() {
+  if command -v wl-copy >/dev/null 2>&1; then wl-copy
+  elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard
+  else cat > /dev/null; fi
+}
+capture_region() {
+  if command -v spectacle >/dev/null 2>&1; then spectacle -r -b -n -o "$IMG"; return 0; fi
+  if command -v gnome-screenshot >/dev/null 2>&1; then gnome-screenshot -a -f "$IMG"; return 0; fi
+  if [ "${XDG_SESSION_TYPE:-}" = "wayland" ] && command -v grim >/dev/null 2>&1 && command -v slurp >/dev/null 2>&1; then
+    grim -g "$(slurp)" "$IMG"; return 0; fi
+  printf 'screen-ocr: no region capture tool found.\n' >&2; exit 1
+}
+capture_region
+if command -v magick >/dev/null 2>&1; then
+  magick "$IMG" -colorspace Gray -brightness-contrast 10x15 -sharpen 0x1 "$PROCESSED"
+else cp "$IMG" "$PROCESSED"; fi
+TESSERACT_BIN="${TESSERACT_BIN:-/usr/bin/tesseract}"
+if ! command -v "$TESSERACT_BIN" >/dev/null 2>&1; then TESSERACT_BIN="$(command -v tesseract || true)"; fi
+[ -n "${TESSERACT_BIN:-}" ] || { printf 'screen-ocr: tesseract not found\n' >&2; exit 1; }
+"$TESSERACT_BIN" "$PROCESSED" stdout -l "$LANGS" --psm "$PSM" --oem 1 \
+  | sed 's/[ \t]\+$//' | tee "$TEXT" | to_clipboard

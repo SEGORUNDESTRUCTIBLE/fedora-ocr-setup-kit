@@ -1,0 +1,44 @@
+
+============================
+Fedora OCR Quick Setup Manual
+============================
+
+This kit installs a no-GUI screen OCR tool and binds it to Win/Super+Z.
+
+Files included:
+  - screen-ocr ........ main OCR script
+  - bind-ocr-hotkey.sh  sets up shortcut for GNOME/KDE
+  - install.sh ........ installs dependencies and configures everything
+  - INSTRUCTIONS.txt .. this manual
+
+---
+1. Extract the folder
+---------------------
+unzip fedora-ocr-setup-kit.zip -d fedora-ocr-setup-kit
+cd fedora-ocr-setup-kit
+
+---
+2. Run the installer
+--------------------
+bash install.sh
+
+This will:
+- Install dependencies (tesseract, ImageMagick, wl-clipboard/xclip, spectacle, gnome-screenshot, grim, slurp)
+- Place 'screen-ocr' in ~/.local/bin/
+- Bind Win/Super+Z (GNOME: Super+Z, KDE: Meta+Z)
+
+---
+3. Use it
+---------
+Press Win/Super+Z → select a region → text is in your clipboard.
+
+You can also run manually:
+~/.local/bin/screen-ocr
+
+---
+4. Troubleshooting
+------------------
+- If OCR not working: check `tesseract` is installed (`tesseract --version`).
+- If shortcut not firing: log out/in once, or rerun `bash bind-ocr-hotkey.sh`.
+
+Enjoy zero-GUI screen OCR!
